@@ -31,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     //  I've not considered reduce() functionality, to merge it with old State.
+    //  refer: https://www.raywenderlich.com/817602-mvi-architecture-for-android-tutorial-getting-started#toc-anchor-008
     private fun setupObservers() {
         lifecycleScope.launch {
             viewModel.stateFlow.collect {
