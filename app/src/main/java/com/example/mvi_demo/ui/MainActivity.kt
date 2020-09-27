@@ -6,8 +6,8 @@ import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.mvi_demo.R
 import com.example.mvi_demo.databinding.ActivityMainBinding
-import com.example.mvi_demo.ui.intent.MainIntent
-import com.example.mvi_demo.ui.state.MainState
+import com.example.mvi_demo.ui.state.FetchState
+import com.example.mvi_demo.ui.state.UserIntent
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
@@ -35,16 +35,23 @@ class MainActivity : AppCompatActivity() {
     private fun setupObservers() {
         lifecycleScope.launch {
             viewModel.stateFlow.collect {
-                when (it) {
-                    is MainState.Loading ->
+                when (it.fetchState) {
+                    is FetchState.NotFetched ->
+                        setText(
+                            text = getString(R.string.hello_world),
+                            btnText = getString(R.string.click_me)
+                        )
+
+                    is FetchState.Fetching ->
                         setText(
                             text = "Loading...!",
                             btnText = "Pls, wait!"
                         )
 
-                    is MainState.Users -> {
+                    is FetchState.Fetched -> {
+                        println("yup size: ${it.userList?.size}")
                         val sBuilder = StringBuilder()
-                        it.user.forEachIndexed { index, user ->
+                        it.userList?.forEachIndexed { index, user ->
                             sBuilder.append(
                                 "index: $index, userIs: $user"
                             )
@@ -55,17 +62,12 @@ class MainActivity : AppCompatActivity() {
                         )
                     }
 
-                    is MainState.Error ->
+                    is FetchState.Error -> {
                         setText(
-                            text = "Something went wrong! ${it.error}",
+                            text = "Something went wrong! ${it.fetchState.msg}",
                             btnText = getString(R.string.click_me)
                         )
-
-                    else ->
-                        setText(
-                            text = getString(R.string.hello_world),
-                            btnText = getString(R.string.click_me)
-                        )
+                    }
                 }
             }
         }
@@ -74,7 +76,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupBtn() =
         binding.btnClickMe.setOnClickListener {
             lifecycleScope.launch {
-                viewModel.intent.send(MainIntent.FetchUser)
+                viewModel.intent.send(UserIntent.FetchUsers)
             }
         }
 
